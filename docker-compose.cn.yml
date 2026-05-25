@@ -1,9 +1,12 @@
-# 国内环境 Docker 镜像加速
+# 国内 Docker Hub 镜像代理（无需登录）
 # 用法: docker compose -f docker-compose.yml -f docker-compose.cn.yml up -d --build
 
 services:
   redis:
-    image: registry.cn-hangzhou.aliyuncs.com/library/redis:7-alpine
+    image: docker.m.daocloud.io/library/redis:7-alpine
 
   nginx:
-    image: registry.cn-hangzhou.aliyuncs.com/library/nginx:1.25-alpine
+    image: docker.m.daocloud.io/library/nginx:1.25-alpine
+
+  certbot:
+    image: docker.m.daocloud.io/certbot/certbot:latest
