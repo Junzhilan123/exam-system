@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数据库原理及应用机考系统</title>
+    <title>{{ system_name }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -111,6 +111,11 @@
             border-color: #667eea;
             background: #f5f3ff;
         }
+        .datetime-badge {
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+            border: 1px solid #c7d2fe;
+            color: #4338ca;
+        }
         .semester-card {
             background: white;
             border: 2px solid transparent;
@@ -133,8 +138,10 @@
             <div class="icon-box inline-block mb-4">
                 <span class="text-6xl">📚</span>
             </div>
-            <h1 class="text-2xl font-bold text-gray-800 mb-2">数据库原理及应用</h1>
-            <p class="text-gray-500 text-sm">2026年春季学期期末考试</p>
+            <h1 class="text-2xl font-bold text-gray-800 mb-3 leading-snug">{{ system_name }}</h1>
+            <div id="datetime-display" class="datetime-badge inline-block px-4 py-2 rounded-xl text-sm font-medium tabular-nums">
+                加载中...
+            </div>
             <div class="countdown-badge inline-block mt-4 px-4 py-2 rounded-full text-white text-sm font-semibold">
                 ⏱️ 考试时长：90分钟
             </div>
@@ -271,6 +278,21 @@
     </div>
 
     <script>
+        function updateDateTime() {
+            var now = new Date();
+            var weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            var y = now.getFullYear();
+            var m = String(now.getMonth() + 1).padStart(2, '0');
+            var d = String(now.getDate()).padStart(2, '0');
+            var h = String(now.getHours()).padStart(2, '0');
+            var min = String(now.getMinutes()).padStart(2, '0');
+            var sec = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('datetime-display').textContent =
+                '📅 ' + y + '年' + m + '月' + d + '日 ' + weekdays[now.getDay()] + '  🕐 ' + h + ':' + min + ':' + sec;
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+
         function selectSubject(code, name, icon) {
             document.querySelectorAll('.subject-card').forEach(function(card) {
                 card.classList.remove('selected');
@@ -322,6 +344,9 @@
                     return response.json();
                 })
                 .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
                     var code = data.code;
                     showQRCode(code);
                     pollScanStatus(code);
@@ -336,10 +361,9 @@
 
         function showQRCode(code) {
             var qrcodeContainer = document.getElementById('qrcode');
-            var url = window.location.origin + '/scan_login_page/' + code;
-            var qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+            var qrCodeUrl = '/api/qrcode/' + encodeURIComponent(code) + '.png?t=' + Date.now();
             qrcodeContainer.innerHTML = `
-                <img src="${qrCodeUrl}" alt="二维码" class="w-40 h-40 rounded-lg">
+                <img src="${qrCodeUrl}" alt="二维码" class="w-40 h-40 rounded-lg" onerror="this.parentElement.innerHTML='<span class=\\'text-red-500 text-sm\\'>二维码加载失败，请重试</span>'">
                 <div class="text-xs text-gray-400 mt-2 font-mono">${code}</div>
             `;
             document.getElementById('scan-status').innerHTML = '<span class="text-blue-600">等待扫码...</span>';

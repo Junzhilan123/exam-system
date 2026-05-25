@@ -1,4 +1,5 @@
-from flask import render_template, request, redirect, url_for, session, jsonify
+from flask import render_template, request, redirect, url_for, session, jsonify, send_file
+from io import BytesIO
 from app import app
 from app.data.questions import get_exam_questions, single_choice_questions, true_false_questions, design_questions, sql_questions
 from app.data.question_bank import get_questions_by_subject_semester, get_all_questions_for_subject, question_bank, reload_bank
@@ -42,8 +43,24 @@ def index():
 
 @app.route('/generate_qrcode')
 def generate_qrcode():
-    code = create_scan_code()
-    return jsonify({'code': code})
+    try:
+        code = create_scan_code()
+        return jsonify({'code': code, 'scan_url': url_for('scan_login_page', code=code, _external=True)})
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/qrcode/<code>.png')
+def qrcode_image(code):
+    """服务端生成二维码图片，不依赖外网 API。"""
+    import qrcode
+
+    scan_url = url_for('scan_login_page', code=code, _external=True)
+    img = qrcode.make(scan_url)
+    buf = BytesIO()
+    img.save(buf, format='PNG')
+    buf.seek(0)
+    return send_file(buf, mimetype='image/png', download_name=f'scan_{code}.png')
 
 @app.route('/check_scan/<code>')
 def check_scan(code):

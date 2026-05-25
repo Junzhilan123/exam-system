@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>考试结果</title>
+    <title>{{ system_name }} - 考试结果</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * { font-family: 'Inter', 'Microsoft YaHei', sans-serif; }
@@ -22,7 +22,7 @@
 <body>
     <div class="header px-6 py-4 sticky top-0 z-10 text-white">
         <div class="max-w-5xl mx-auto flex items-center justify-between">
-            <h1 class="text-xl font-bold">📚 考试结果</h1>
+            <h1 class="text-xl font-bold">📚 {{ system_name }}</h1>
             <div class="text-white/80 text-sm">{{ result.student_id }} | {{ result.student_name }}</div>
         </div>
     </div>

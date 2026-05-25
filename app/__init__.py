@@ -28,4 +28,12 @@ else:
 Session(app)
 CORS(app)
 
+from app.config import SYSTEM_NAME
+
+
+@app.context_processor
+def inject_globals():
+    return {"system_name": SYSTEM_NAME}
+
+
 from app import routes
