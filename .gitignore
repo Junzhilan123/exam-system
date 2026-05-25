@@ -1,0 +1,20 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+flask_session/
+
+# 运行时数据（部署后由服务器生成）
+app/data/exam_results.json
+app/data/members.json
+app/data/question_bank.json
+
+# SSL 私钥与证书（切勿提交）
+deploy/ssl/*.pem
+deploy/ssl/*.key
+deploy/ssl/*.crt
+deploy/nginx.ssl.conf
+
+# Docker 本地卷
+certbot/

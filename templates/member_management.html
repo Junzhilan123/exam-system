@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会员管理 - 超级管理员</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', 'Microsoft YaHei', sans-serif; }
+        body { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3); }
+        .member-card { transition: all 0.3s ease; }
+        .member-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .level-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .level-guest { background: #f3f4f6; color: #6b7280; }
+        .level-free { background: #dcfce7; color: #16a34a; }
+        .level-vip { background: #fef3c7; color: #d97706; }
+        .level-admin { background: #fee2e2; color: #dc2626; }
+        .status-active { color: #10b981; }
+        .status-inactive { color: #ef4444; }
+        .action-btn { transition: all 0.2s ease; }
+        .action-btn:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+    <div class="header px-6 py-4">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-white flex items-center">
+                    <span class="mr-2">🔧</span> 会员管理系统
+                </h1>
+                <p class="text-white/80 text-sm mt-1">超级管理员控制台</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="/teacher_dashboard" class="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors">
+                    📊 成绩管理
+                </a>
+                <a href="/teacher_logout" class="px-4 py-2 bg-red-500/80 text-white rounded-lg hover:bg-red-500 transition-colors">
+                    🚪 退出登录
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl p-6 shadow-sm">
+                <div class="text-3xl font-bold text-purple-600">{{ members|length }}</div>
+                <div class="text-gray-500 text-sm mt-2">总会员数</div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-sm">
+                <div class="text-3xl font-bold text-green-600">{{ get_level_count('free') }}</div>
+                <div class="text-gray-500 text-sm mt-2">免费会员</div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-sm">
+                <div class="text-3xl font-bold text-yellow-600">{{ get_level_count('vip') }}</div>
+                <div class="text-gray-500 text-sm mt-2">VIP会员</div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-sm">
+                <div class="text-3xl font-bold text-red-600">{{ get_level_count('admin') }}</div>
+                <div class="text-gray-500 text-sm mt-2">管理员</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b">
+                <h2 class="font-semibold text-gray-800 flex items-center">
+                    <span class="mr-2">👥</span> 会员列表
+                </h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学号</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">姓名</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">会员等级</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">考试次数</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">平均分</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">注册时间</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for member in members %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap">{{ member.id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ member.student_id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ member.student_name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <span class="mr-2">{{ member.level_info.icon }}</span>
+                                    <span class="level-badge level-{{ member.member_level }}">{{ member.level_info.name }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ member.exams_taken }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ member.avg_score }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-{{ member.status }} font-medium">
+                                    {% if member.status == 'active' %}✓ 活跃{% else %}✗ 禁用{% endif %}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ member.member_since }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="showLevelModal({{ member.id }}, '{{ member.student_name }}', '{{ member.member_level }}')" 
+                                            class="action-btn px-3 py-1.5 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600">
+                                        升级
+                                    </button>
+                                    <button onclick="toggleStatus({{ member.id }}, '{{ member.status }}')" 
+                                            class="action-btn px-3 py-1.5 {% if member.status == 'active' %}bg-yellow-500{% else %}bg-green-500{% endif %} text-white text-sm rounded-lg hover:opacity-90">
+                                        {% if member.status == 'active' %}禁用{% else %}启用{% endif %}
+                                    </button>
+                                    {% if member.member_level != 'admin' %}
+                                    <button onclick="confirmDelete({{ member.id }}, '{{ member.student_name }}')" 
+                                            class="action-btn px-3 py-1.5 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600">
+                                        删除
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="levelModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-800">升级会员等级</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">选择会员等级</label>
+                <form id="levelForm" method="POST">
+                    <select name="level" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        {% for level in levels %}
+                        <option value="{{ level.id }}">{{ level.icon }} {{ level.name }} - {{ level.description }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="w-full mt-4 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
+                        确认升级
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMemberId = 0;
+
+        function showLevelModal(memberId, name, currentLevel) {
+            currentMemberId = memberId;
+            document.getElementById('levelForm').action = `/teacher/member/update_level/${memberId}`;
+            document.querySelector('select[name="level"]').value = currentLevel;
+            document.getElementById('levelModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('levelModal').classList.add('hidden');
+        }
+
+        function toggleStatus(memberId, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+            if (confirm(`确定要${newStatus === 'active' ? '启用' : '禁用'}该会员吗？`)) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/teacher/member/update_status/${memberId}`;
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'status';
+                input.value = newStatus;
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function confirmDelete(memberId, name) {
+            if (confirm(`确定要删除会员「${name}」吗？此操作不可恢复。`)) {
+                window.location.href = `/teacher/member/delete/${memberId}`;
+            }
+        }
+
+        function get_level_count(level) {
+            return {{ members|selectattr('member_level', 'equalto', level)|list|length }};
+        }
+    </script>
+</body>
+</html>
+
+{% macro get_level_count(level) %}
+    {{ members|selectattr('member_level', 'equalto', level)|list|length }}
+{% endmacro %}

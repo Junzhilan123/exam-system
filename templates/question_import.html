@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>题库导入 - 教师管理后台</title>
+    <style>
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #f5f7fa; margin: 0; padding: 0; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { margin: 0; font-size: 22px; }
+        .nav-btn { background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 25px; text-decoration: none; color: white; font-weight: bold; margin-left: 10px; }
+        .main { max-width: 720px; margin: 30px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+        select, input[type=file] { width: 100%; padding: 10px; margin-bottom: 16px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn { background: #11998e; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        .btn:hover { background: #0d7a72; }
+        .success { background: #ecfdf5; color: #065f46; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+        .error { background: #fef2f2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+        pre { background: #f8fafc; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
+        .stats-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .stats-table th, .stats-table td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+        .stats-table th { background: #f9fafb; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📥 题库增量导入</h1>
+        <div>
+            <a href="{{ url_for('teacher_dashboard') }}" class="nav-btn">成绩管理</a>
+            <a href="{{ url_for('member_management') }}" class="nav-btn">会员管理</a>
+            <a href="{{ url_for('teacher_logout') }}" class="nav-btn">退出</a>
+        </div>
+    </div>
+
+    <div class="main">
+        {% if result %}
+        <div class="success">
+            导入完成：新增 {{ result.added }} 题，跳过重复 {{ result.skipped }} 题
+            {% if result.errors %}
+            <br>警告 {{ result.errors|length }} 条（见下方）
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <div class="card">
+            <h2>上传本地 JSON 题库</h2>
+            <p style="color:#666; font-size:14px;">支持按题型分组的 JSON，或包含科目/学期键的完整题库格式。重复题目（题干+答案相同）默认跳过。</p>
+            <form method="post" enctype="multipart/form-data">
+                <label>科目</label>
+                <select name="subject_code" required>
+                    {% for subject in subjects %}
+                    <option value="{{ subject.code }}">{{ subject.code }} - {{ subject.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>学期</label>
+                <select name="semester_code" required>
+                    {% for semester in semesters %}
+                    <option value="{{ semester.code }}">{{ semester.code }} - {{ semester.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>JSON 文件</label>
+                <input type="file" name="bank_file" accept=".json,application/json" required>
+                <label><input type="checkbox" name="allow_duplicates" value="1"> 允许导入重复题目</label>
+                <br><br>
+                <button type="submit" class="btn">开始导入</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>JSON 格式示例</h2>
+            <pre>{
+  "single_choice": [
+    {
+      "question": "数据库系统的核心是？",
+      "options": ["A. 数据库", "B. 数据库管理系统", "C. 数据", "D. 软件"],
+      "answer": "B",
+      "analysis": "可选解析"
+    }
+  ],
+  "true_false": [
+    {"question": "SQL是过程化语言。", "answer": "F"}
+  ]
+}</pre>
+        </div>
+
+        <div class="card">
+            <h2>当前题库统计</h2>
+            {% if bank_stats %}
+            <table class="stats-table">
+                <tr><th>科目</th><th>学期</th><th>题型分布</th></tr>
+                {% for subject, semesters in bank_stats.items() %}
+                    {% for semester, types in semesters.items() %}
+                    <tr>
+                        <td>{{ subject }}</td>
+                        <td>{{ semester }}</td>
+                        <td>{% for t, n in types.items() %}{{ t }}: {{ n }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+            </table>
+            {% else %}
+            <p>暂无题库数据</p>
+            {% endif %}
+        </div>
+
+        {% if result and result.errors %}
+        <div class="card">
+            <h2>导入警告</h2>
+            <ul>
+                {% for err in result.errors[:30] %}
+                <li>{{ err }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

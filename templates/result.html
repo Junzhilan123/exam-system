@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>考试结果</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { font-family: 'Inter', 'Microsoft YaHei', sans-serif; }
+        body { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .score-card { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .score-value { font-size: 72px; font-weight: 800; }
+        .stat-card, .question-card { background: white; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .option-correct { background: #dcfce7; border-color: #10b981; }
+        .option-wrong { background: #fee2e2; border-color: #ef4444; }
+        .explanation-card { background: #fef3c7; border-left: 4px solid #f59e0b; }
+        .nav-tab.active { color: #667eea; border-bottom: 2px solid #667eea; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body>
+    <div class="header px-6 py-4 sticky top-0 z-10 text-white">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <h1 class="text-xl font-bold">📚 考试结果</h1>
+            <div class="text-white/80 text-sm">{{ result.student_id }} | {{ result.student_name }}</div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-4 py-6">
+        <div class="score-card rounded-2xl p-8 mb-6 text-white text-center">
+            <div class="score-value">{{ result.score }}</div>
+            <div class="text-white/80 text-lg mb-2">总分：{{ result.total_score }}分</div>
+            <div class="text-xl font-semibold">
+                {% if result.score >= 90 %}🎉 优秀
+                {% elif result.score >= 80 %}👍 良好
+                {% elif result.score >= 60 %}😊 及格
+                {% else %}💪 继续努力{% endif %}
+            </div>
+        </div>
+
+        {% if result.exam_sections %}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {% for section in result.exam_sections %}
+            <div class="stat-card p-4 text-center">
+                <div class="text-2xl font-bold text-purple-600">
+                    {{ result.type_scores.get(section.type, 0) }}
+                </div>
+                <div class="text-gray-500 text-sm mt-1">{{ section.title }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="flex gap-4 mb-6 overflow-x-auto border-b pb-2">
+            {% for section in result.exam_sections %}
+            <div class="nav-tab cursor-pointer font-semibold whitespace-nowrap px-2 pb-2 {% if loop.first %}active{% endif %}"
+                 onclick="showTab('{{ section.type }}', this)">{{ section.icon }} {{ section.title }}</div>
+            {% endfor %}
+        </div>
+
+        {% for section in result.exam_sections %}
+        <div id="tab-{{ section.type }}" class="mb-8 {% if not loop.first %}hidden{% endif %}">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">{{ section.icon }} {{ section.title }}解析</h3>
+            {% for q in result.questions.get(section.type, []) %}
+            {% set q_id = q.id|string %}
+            {% set user_answer = result.answers.get(section.type, {}).get(q_id, q.user_answer if q.user_answer is defined else '') %}
+            {% set is_correct = q.is_correct if q.is_correct is defined else false %}
+            <div class="question-card p-5 mb-4">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm mr-3">{{ loop.index }}</span>
+                        <span class="text-gray-800">{{ q.question }}</span>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-sm font-semibold {% if is_correct %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                        {% if is_correct %}✓ 正确 (+{{ q.score }}){% else %}✗ {% if user_answer %}错误{% else %}未作答{% endif %}{% endif %}
+                    </span>
+                </div>
+
+                <div class="ml-11 space-y-3">
+                    {% if section.mode == 'single' and q.options %}
+                        {% for opt in q.options %}
+                        <div class="p-3 rounded-lg border-2 {{ 'option-correct' if opt[0] == q.answer else ('option-wrong' if opt[0] == user_answer and not is_correct else 'border-gray-100 bg-gray-50') }}">{{ opt }}</div>
+                        {% endfor %}
+                    {% elif section.mode == 'multiple' and q.options %}
+                        {% for opt in q.options %}
+                        <div class="p-3 rounded-lg border-2 border-gray-100 bg-gray-50">{{ opt }}</div>
+                        {% endfor %}
+                    {% elif section.mode == 'true_false' %}
+                        <div class="flex gap-3">
+                            <div class="flex-1 p-3 rounded-lg border-2 text-center {{ 'option-correct' if q.answer == 'T' else ('option-wrong' if user_answer == 'T' and not is_correct else 'border-gray-100 bg-gray-50') }}">✓ 正确 (T)</div>
+                            <div class="flex-1 p-3 rounded-lg border-2 text-center {{ 'option-correct' if q.answer == 'F' else ('option-wrong' if user_answer == 'F' and not is_correct else 'border-gray-100 bg-gray-50') }}">✗ 错误 (F)</div>
+                        </div>
+                    {% elif section.mode == 'text' or section.mode == 'essay' %}
+                        <div class="p-4 rounded-lg bg-gray-50 border border-gray-200 min-h-[80px] whitespace-pre-wrap">{{ user_answer or '未作答' }}</div>
+                    {% endif %}
+
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div><span class="text-gray-500">你的答案：</span><span class="font-semibold">{{ user_answer or '未作答' }}</span></div>
+                        <div><span class="text-gray-500">参考答案：</span><span class="font-semibold text-green-600">{{ q.answer }}</span></div>
+                    </div>
+                    {% if q.analysis %}
+                    <div class="explanation-card rounded-lg p-3">
+                        <div class="text-sm font-semibold text-amber-800 mb-1">💡 解析</div>
+                        <div class="text-sm text-amber-700">{{ q.analysis }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="flex gap-4 mb-8">
+            <button class="flex-1 py-4 rounded-xl bg-gray-200 text-gray-700 font-semibold" onclick="window.location.href='/clear_session'">🏠 返回首页</button>
+            <button class="btn-primary flex-1 py-4 rounded-xl text-white font-semibold" onclick="window.print()">🖨️ 打印成绩单</button>
+        </div>
+    </div>
+
+    <script>
+        function showTab(type, el) {
+            document.querySelectorAll('[id^="tab-"]').forEach(function(t) { t.classList.add('hidden'); });
+            document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+            document.getElementById('tab-' + type).classList.remove('hidden');
+            el.classList.add('active');
+        }
+    </script>
+</body>
+</html>

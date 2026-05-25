@@ -1,0 +1,10 @@
+{
+  "single_choice": [
+    {
+      "question": "测试增量导入题目：Flask 是什么？",
+      "options": ["A. 数据库", "B. Web框架", "C. 操作系统", "D. 浏览器"],
+      "answer": "B",
+      "analysis": "Flask 是 Python 轻量级 Web 框架"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    expose:
+      - "6379"
+
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-change-me}
+      - TEACHER_USERNAME=${TEACHER_USERNAME:-teacher}
+      - TEACHER_PASSWORD=${TEACHER_PASSWORD:-change-me}
+      - REDIS_URL=redis://redis:6379/0
+      - FLASK_DEBUG=0
+      - PORT=5000
+    volumes:
+      - exam_data:/app/app/data
+    depends_on:
+      - redis
+    expose:
+      - "5000"
+
+  nginx:
+    image: nginx:1.25-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${NGINX_CONF:-./deploy/nginx.http.conf}:/etc/nginx/conf.d/default.conf:ro
+      - certbot_conf:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot:ro
+      - ./deploy/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  exam_data:
+  redis_data:
+  certbot_conf:
+  certbot_www:

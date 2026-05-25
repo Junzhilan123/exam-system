@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据库原理及应用机考系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', 'Microsoft YaHei', sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            animation: gradientShift 15s ease infinite;
+            background-size: 200% 200%;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .card {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        .info-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-left: 4px solid #667eea;
+        }
+        .icon-box {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .teacher-link a {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .teacher-link a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #11998e, #38ef7d);
+            transition: width 0.3s ease;
+        }
+        .teacher-link a:hover::after {
+            width: 100%;
+        }
+        .countdown-badge {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .subject-card {
+            background: white;
+            border: 2px solid transparent;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        .subject-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+        .subject-card.selected {
+            border-color: #667eea;
+            background: #f5f3ff;
+        }
+        .semester-card {
+            background: white;
+            border: 2px solid transparent;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        .semester-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+        }
+        .semester-card.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="card rounded-3xl p-8 max-w-md w-full">
+        <div class="text-center mb-8">
+            <div class="icon-box inline-block mb-4">
+                <span class="text-6xl">📚</span>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">数据库原理及应用</h1>
+            <p class="text-gray-500 text-sm">2026年春季学期期末考试</p>
+            <div class="countdown-badge inline-block mt-4 px-4 py-2 rounded-full text-white text-sm font-semibold">
+                ⏱️ 考试时长：90分钟
+            </div>
+        </div>
+
+        <div class="info-card rounded-xl p-5 mb-4">
+            <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
+                <span class="mr-2">📚</span> 选择科目
+            </h3>
+            <div class="grid grid-cols-2 gap-3">
+                {% for subject in subjects %}
+                <button class="subject-card p-3 rounded-xl text-left transition-all hover:scale-105" 
+                        onclick="selectSubject('{{ subject.code }}', '{{ subject.name }}', '{{ subject.icon }}')">
+                    <div class="text-xl mb-1">{{ subject.icon }}</div>
+                    <div class="font-semibold text-gray-800">{{ subject.name }}</div>
+                    <div class="text-xs text-gray-500">{{ subject.description[:20] }}...</div>
+                </button>
+                {% endfor %}
+            </div>
+            <input type="hidden" id="selected-subject" name="subject_code" value="CS201">
+            <div class="mt-4 p-3 bg-white rounded-xl text-center">
+                <span class="text-sm text-gray-500">已选择科目：</span>
+                <span id="selected-subject-name" class="font-semibold text-purple-600">📊 数据库原理及应用</span>
+            </div>
+        </div>
+
+        <div class="info-card rounded-xl p-5 mb-6">
+            <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
+                <span class="mr-2">📅</span> 选择学期
+            </h3>
+            <div class="grid grid-cols-3 gap-2">
+                {% for semester in semesters %}
+                <button class="semester-card p-2 rounded-lg text-center transition-all hover:scale-105" 
+                        onclick="selectSemester('{{ semester.code }}', '{{ semester.name }}')">
+                    <div class="text-xs text-gray-500">{{ semester.code }}</div>
+                    <div class="font-medium text-gray-800 text-sm">{{ semester.name[-5:] }}</div>
+                </button>
+                {% endfor %}
+            </div>
+            <input type="hidden" id="selected-semester" name="semester_code" value="2026SP">
+            <div class="mt-3 p-3 bg-white rounded-xl text-center">
+                <span class="text-sm text-gray-500">已选择学期：</span>
+                <span id="selected-semester-name" class="font-semibold text-blue-600">2026年春季学期</span>
+            </div>
+        </div>
+
+        {% if error %}
+        <div class="bg-red-50 border border-red-200 text-red-600 rounded-xl p-4 mb-6 text-center">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <div class="flex justify-center mb-6">
+            <div class="flex bg-gray-100 rounded-full p-1">
+                <button id="login-tab" class="tab-btn px-4 py-2 rounded-full text-sm font-medium text-gray-500 hover:text-gray-700">
+                    账号登录
+                </button>
+                <button id="scan-tab" class="tab-btn px-4 py-2 rounded-full text-sm font-medium bg-white shadow-sm text-purple-600">
+                    微信扫码
+                </button>
+            </div>
+        </div>
+
+        <div id="login-form" class="space-y-4 hidden">
+            <form action="/start_exam" method="post" class="space-y-4">
+                <input type="hidden" name="subject_code" id="login-subject-code" value="CS201">
+                <input type="hidden" name="semester_code" id="login-semester-code" value="2026SP">
+                <div>
+                    <label for="student_id" class="block text-sm font-medium text-gray-700 mb-2">
+                        <span class="mr-1">🔢</span> 学号
+                    </label>
+                    <input 
+                        type="text" 
+                        id="student_id" 
+                        name="student_id" 
+                        placeholder="请输入学号" 
+                        required
+                        class="input-field w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none bg-white"
+                    >
+                </div>
+                <div>
+                    <label for="student_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        <span class="mr-1">👤</span> 姓名
+                    </label>
+                    <input 
+                        type="text" 
+                        id="student_name" 
+                        name="student_name" 
+                        placeholder="请输入姓名" 
+                        required
+                        class="input-field w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none bg-white"
+                    >
+                </div>
+                <button 
+                    type="submit" 
+                    class="btn-primary w-full py-4 rounded-xl text-white font-semibold text-lg shadow-lg"
+                >
+                    🚀 开始考试
+                </button>
+            </form>
+        </div>
+
+        <div id="scan-form">
+            <div class="bg-gray-50 rounded-xl p-6 text-center">
+                <div class="text-gray-600 text-sm mb-4">使用微信扫码登录</div>
+                <div class="bg-white rounded-xl p-4 inline-block mb-4" id="qrcode-container">
+                    <div class="w-48 h-48 flex items-center justify-center">
+                        <div id="qrcode" class="text-center">
+                            <div class="text-6xl mb-2">📱</div>
+                            <div class="text-sm text-gray-500">点击生成二维码</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-500 mb-4">
+                    <div>1. 打开微信扫一扫</div>
+                    <div>2. 扫描上方二维码</div>
+                    <div>3. 输入学号和姓名完成登录</div>
+                </div>
+                <button 
+                    id="generate-qrcode-btn" 
+                    class="btn-primary px-6 py-3 rounded-xl text-white font-semibold"
+                >
+                    🎲 生成二维码
+                </button>
+                <div id="scan-status" class="mt-4 text-sm"></div>
+            </div>
+        </div>
+
+        <div class="teacher-link text-center mt-6 pt-6 border-t border-gray-100">
+            <a href="/teacher" class="text-green-600 font-semibold hover:text-green-700">
+                👨‍🏫 教师管理入口
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function selectSubject(code, name, icon) {
+            document.querySelectorAll('.subject-card').forEach(function(card) {
+                card.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            document.getElementById('selected-subject').value = code;
+            document.getElementById('login-subject-code').value = code;
+            document.getElementById('selected-subject-name').innerHTML = icon + ' ' + name;
+        }
+
+        function selectSemester(code, name) {
+            document.querySelectorAll('.semester-card').forEach(function(card) {
+                card.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            document.getElementById('selected-semester').value = code;
+            document.getElementById('login-semester-code').value = code;
+            document.getElementById('selected-semester-name').innerHTML = name;
+        }
+
+        document.getElementById('login-tab').addEventListener('click', function() {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('scan-form').classList.add('hidden');
+            document.getElementById('login-tab').classList.add('bg-white', 'shadow-sm', 'text-purple-600');
+            document.getElementById('login-tab').classList.remove('text-gray-500');
+            document.getElementById('scan-tab').classList.remove('bg-white', 'shadow-sm', 'text-purple-600');
+            document.getElementById('scan-tab').classList.add('text-gray-500');
+        });
+
+        document.getElementById('scan-tab').addEventListener('click', function() {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('scan-form').classList.remove('hidden');
+            document.getElementById('scan-tab').classList.add('bg-white', 'shadow-sm', 'text-purple-600');
+            document.getElementById('scan-tab').classList.remove('text-gray-500');
+            document.getElementById('login-tab').classList.remove('bg-white', 'shadow-sm', 'text-purple-600');
+            document.getElementById('login-tab').classList.add('text-gray-500');
+        });
+
+        document.getElementById('generate-qrcode-btn').addEventListener('click', function() {
+            var btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '⏳ 生成中...';
+
+            fetch('/generate_qrcode')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    var code = data.code;
+                    showQRCode(code);
+                    pollScanStatus(code);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    btn.disabled = false;
+                    btn.innerHTML = '🎲 生成二维码';
+                    document.getElementById('scan-status').innerHTML = '<span class="text-red-600">❌ 生成失败，请重试</span>';
+                });
+        });
+
+        function showQRCode(code) {
+            var qrcodeContainer = document.getElementById('qrcode');
+            var url = window.location.origin + '/scan_login_page/' + code;
+            var qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+            qrcodeContainer.innerHTML = `
+                <img src="${qrCodeUrl}" alt="二维码" class="w-40 h-40 rounded-lg">
+                <div class="text-xs text-gray-400 mt-2 font-mono">${code}</div>
+            `;
+            document.getElementById('scan-status').innerHTML = '<span class="text-blue-600">等待扫码...</span>';
+            document.getElementById('generate-qrcode-btn').style.display = 'none';
+        }
+
+        function pollScanStatus(code) {
+            var interval = setInterval(function() {
+                fetch('/check_scan/' + code)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'completed') {
+                            clearInterval(interval);
+                            document.getElementById('scan-status').innerHTML = '<span class="text-green-600">✅ 扫码成功！正在进入考试...</span>';
+                            setTimeout(function() {
+                                window.location.href = '/start_exam_scan/' + code;
+                            }, 1500);
+                        } else if (data.status === 'expired') {
+                            clearInterval(interval);
+                            document.getElementById('scan-status').innerHTML = '<span class="text-red-600">❌ 二维码已过期</span>';
+                            document.getElementById('generate-qrcode-btn').style.display = 'inline-block';
+                            document.getElementById('generate-qrcode-btn').disabled = false;
+                            document.getElementById('generate-qrcode-btn').innerHTML = '🎲 重新生成';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        clearInterval(interval);
+                        document.getElementById('scan-status').innerHTML = '<span class="text-red-600">❌ 连接中断</span>';
+                        document.getElementById('generate-qrcode-btn').style.display = 'inline-block';
+                        document.getElementById('generate-qrcode-btn').disabled = false;
+                        document.getElementById('generate-qrcode-btn').innerHTML = '🎲 重新生成';
+                    });
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
