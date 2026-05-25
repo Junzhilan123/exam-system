@@ -2,6 +2,12 @@
 # 用法: docker compose -f docker-compose.yml -f docker-compose.cn.yml up -d --build
 
 services:
+  app:
+    build:
+      context: .
+      args:
+        PYTHON_IMAGE: docker.m.daocloud.io/library/python:3.11-slim
+
   redis:
     image: docker.m.daocloud.io/library/redis:7-alpine
 

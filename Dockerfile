@@ -1,9 +1,10 @@
-FROM python:3.11-slim
+ARG PYTHON_IMAGE=docker.m.daocloud.io/library/python:3.11-slim
+FROM ${PYTHON_IMAGE}
 
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --no-cache-dir -r requirements.txt
 
 COPY . .
 
