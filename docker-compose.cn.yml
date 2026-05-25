@@ -1,0 +1,9 @@
+# 国内环境 Docker 镜像加速
+# 用法: docker compose -f docker-compose.yml -f docker-compose.cn.yml up -d --build
+
+services:
+  redis:
+    image: registry.cn-hangzhou.aliyuncs.com/library/redis:7-alpine
+
+  nginx:
+    image: registry.cn-hangzhou.aliyuncs.com/library/nginx:1.25-alpine
